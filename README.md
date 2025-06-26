@@ -71,16 +71,11 @@ interface IPage {
     locked: boolean;
 }
 ```
-Каталог карточек товара, выводимый на главной странице
+Интерфейс для модели данных карточек
 ```
-interface ICardsContainer {
-  catalog: ICard [];
-}
-```
-Каталог карточек товара, выводимый в корзине
-```
-interface IBasketContainer {
-	catalog: HTMLElement[];
+interface IDataApiCard {
+	items: ICard[];
+	getCard(cardId: string): ICard;
 }
 ```
 
