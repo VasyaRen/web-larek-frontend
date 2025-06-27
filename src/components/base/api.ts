@@ -38,5 +38,6 @@ export class Api {
             method,
             body: JSON.stringify(data)
         }).then(this.handleResponse);
+        
     }
 }

@@ -24,3 +24,15 @@ export interface IDataApiCard {
 	items: ICard[];
 	getCard(cardId: string): ICard;
 }
+
+export interface IDataCardBasket {
+	items: TCardBasket[];
+	addCard(data: TCardBasket): void;
+	deleteCard(id: string): void;
+	clearBasket(): void;
+	getTotalAmount(): void;
+	getBasketCard(cardId: string): TCardBasket;
+	getCardsId(): string[];
+}
+
+export type TCardBasket = Pick<ICard, 'id' | 'title' | 'price'>;

@@ -15,14 +15,14 @@ import { ICard, IOrder, IDataApiCard } from './types';
 import { Page } from './components/PageView';
 import { Succes } from './components/common/ModalSucces';
 import { BasketItemView } from './components/BasketItem';
+import { DataBasket } from './components/AppData';
 
 const events = new EventEmitter();
 const page = new Page(document.body, events);
 const cardsData = new DataCards(events);
+const basketData = new DataBasket(events);
 const getApi = new Api(API_URL, settings);
 const appData = new AppState(events);
-
-//все переменные с DOM-элементами
 
 const сardPreviewTemplate = document.querySelector(
 	'#card-catalog'
@@ -61,8 +61,10 @@ const basketList = new BasketContainer(
 	modalBasket.querySelector('.basket__list'),
 	events
 );
-
-const contactsForm = new ContactsForm(cloneTemplate(contactsFormTemplate),events);
+const contactsForm = new ContactsForm(
+	cloneTemplate(contactsFormTemplate),
+	events
+);
 const paymentForm = new PaymentForm(cloneTemplate(paymentFormTemplate), events);
 
 events.on('loadingData', () => {
@@ -75,12 +77,20 @@ events.on('loadingData', () => {
 
 events.on('card:select', (evt: { cardId: string }) => {
 	const cardItem = new Card(cloneTemplate(сardFullTemplate), events);
+	if (basketData.getBasketCard(evt.cardId)) {
+		cardItem.stateButton(true);
+	}
 	const selectedCard = cardItem.render(cardsData.getCard(evt.cardId));
 	modal.setContent(selectedCard);
 });
 
-events.on('basket:open', () => {
-	modal.setContent(basket.container);
+events.on('card:addToBasket', (evt: { cardId: string }) => {
+	const { title, price, id } = cardsData.getCard(evt.cardId);
+	basketData.addCard({ title, price, id });
+});
+
+events.on('card:removeFromBasket', (evt: { price: string; id: string }) => {
+	basketData.deleteCard(evt.id);
 });
 
 events.on('modal:open', () => {
@@ -91,24 +101,42 @@ events.on('modal:close', () => {
 	page.locked = false;
 });
 
+events.on('basket:open', () => {
+	modal.setContent(basket.render({}));
+});
+
 events.on('basket:order', () => {
 	modal.setContent(paymentForm.render());
+});
+
+events.on('basket:changed', () => {
+	const basketItems = basketData.cards.map((item: Partial<ICard>) => {
+		const basketItem = new BasketItemView(cloneTemplate(cardBasket), events);
+		basketItem.setIndex(basketData.itemCount++);
+		return basketItem.render(item);
+	});
+
+	basketData.getTotalAmount();
+	basket.totalAmount(basketData.amount);
+	basketList.render({ catalog: basketItems });
+	page.counter = basketItems.length;
 });
 
 events.on('order:submit', () => {
 	modal.setContent(contactsForm.render());
 });
 
-let basketCatalog: HTMLElement[] = [];
-
 events.on('contacts:submit', () => {
-	modal.setContent(succes.container);
-	succes.setAmount(appData.basket.total);
-	appData.clearBasket();
-});
-
-events.on('basket:cleared', ({}) => {
-	basketCatalog = [];
+	modal.setContent(succes.render({}));
+	succes.setAmount(basketData.amount);
+	const orderApiData = Object.assign(
+		appData.order,
+		{ total: basketData.amount },
+		{ items: basketData.getCardsId() }
+	);
+	getApi.post('/order', orderApiData).then(() => { });
+	basketData.clearBasket();
+	appData.initOrder();
 });
 
 events.on(
@@ -118,32 +146,6 @@ events.on(
 	}
 );
 
-events.on('card:addToBasket', (evt: { cardId: string }) => {
-	const { title, price, id } = cardsData.getCard(evt.cardId);
-	const basketItem = new BasketItemView(cloneTemplate(cardBasket), events);
-	const basketItemSelect = basketItem.render({ title, price, id });
-
-	appData.changeCounterProduct(1);
-	basketItem.setIndex(appData.basket._counter);
-	appData.changeTotalAmount(Number({ price }.price));
-
-	basketCatalog.push(basketItemSelect);
-	basketList.render({ catalog: basketCatalog });
-});
-
-events.on('card:removeFromBasket', (evt: { price: string }) => {
-	appData.changeCounterProduct(-1);
-	appData.changeTotalAmount(Number(-evt.price));
-});
-
-events.on('counterProduct:change', (evt: { counter: number }) => {
-	page.counter = evt.counter;
-});
-
-events.on('totalAmount:change', (evt: { total: number }) => {
-	basket.totalAmount(evt.total);
-});
-
 events.on('order.payment:change', (evt: { payment: string }) => {
 	appData.order.payment = evt.payment;
 	events.emit('order:changed');
@@ -151,7 +153,6 @@ events.on('order.payment:change', (evt: { payment: string }) => {
 
 events.on('order:changed', () => {
 	const { address, payment } = appData.validateOrder();
-
 	const valid = !address && !payment;
 	const errors = Object.values({ payment, address })
 		.filter((i) => !!i)
@@ -164,7 +165,7 @@ events.on('order:changed', () => {
 	});
 });
 
-events.on('contacts:changed', ({}) => {
+events.on('contacts:changed', () => {
 	const { email, phone } = appData.validateOrder();
 	const valid = !email && !phone;
 	const errors = Object.values({ email, phone })
@@ -177,6 +178,10 @@ events.on('contacts:changed', ({}) => {
 		valid: valid,
 		errors: errors,
 	});
+});
+
+events.on('succes:close', () => {
+	modal.close();
 });
 
 getApi

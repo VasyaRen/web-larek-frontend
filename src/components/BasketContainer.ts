@@ -7,7 +7,6 @@ interface IBasketContainer {
 
 export class BasketContainer extends Component<IBasketContainer> {
 	protected cardCatalog: HTMLElement;
-	protected container: HTMLElement;
 	events: IEvents;
 
 	constructor(container: HTMLElement, events: IEvents) {

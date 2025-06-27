@@ -2,20 +2,19 @@ import { Component } from './base/Component';
 import { IEvents } from './base/events';
 
 interface IBasketView {
-	basket: HTMLElement;
+	totalAmount(total: number): void;
 }
 
 export class Basket extends Component<IBasketView> {
-	orderButton: HTMLButtonElement;
+	protected orderButton: HTMLButtonElement;
 	events: IEvents;
-	container: HTMLElement;
-	allPrice: HTMLElement;
-	amount: number;
-	total: number;
+	protected allPrice: HTMLElement;
+
 	constructor(container: HTMLElement, events: IEvents) {
 		super(container);
 		this.events = events;
 		this.orderButton = container.querySelector('.basket__button');
+		this.orderButton.disabled = true;
 		this.orderButton.addEventListener('click', () => {
 			this.events.emit('basket:order');
 		});
@@ -24,5 +23,10 @@ export class Basket extends Component<IBasketView> {
 
 	totalAmount(total: number) {
 		this.allPrice.textContent = `${total} синапсов`;
+		if (total !== 0) {
+			this.orderButton.disabled = false;
+		} else {
+			this.orderButton.disabled = true;
+		}
 	}
 }

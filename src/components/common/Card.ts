@@ -9,11 +9,11 @@ export class Card extends Component<ICard> {
   cardTitle: HTMLElement;
   cardImage: HTMLImageElement;
   cardPrice: HTMLElement;
-  cardDescription?: HTMLElement | null;
+  cardDescription: HTMLElement;
   events: IEvents;
   cardId: string;
-  addProduct: HTMLElement;
-item: HTMLElement
+  protected addProductButton: HTMLButtonElement;
+
   constructor(container: HTMLElement, events: IEvents) {
     super(container);
     this.cardCategory = this.container.querySelector('.card__category');
@@ -21,18 +21,19 @@ item: HTMLElement
     this.cardImage = this.container.querySelector('.card__image');
     this.cardPrice = this.container.querySelector('.card__price');
     this.cardDescription = this.container.querySelector('.card__text');
-    this.addProduct = this.container.querySelector('.button');
-    if (this.addProduct) {
-      this.addProduct.addEventListener('click', () => {
+    this.addProductButton = this.container.querySelector('.button');
+    this.events = events;
+    if (this.addProductButton) {
+      this.addProductButton.addEventListener('click', () => {
         this.events.emit('card:addToBasket', { cardId: this.id });
+        this.stateButton(true);
       });
     }
-
-    this.events = events;
-
-    this.container.addEventListener('click', () => {
-      this.events.emit('card:select', { cardId: this.id });
-    });
+    if (!this.container.classList.contains('card_compact')) {
+      this.container.addEventListener('click', () => {
+        this.events.emit('card:select', { cardId: this.id });
+      });
+    }
   }
   set title(title: string) {
     this.cardTitle.textContent = title;
@@ -50,6 +51,9 @@ item: HTMLElement
   set price(price: string | null) {
     if (price === null) {
       this.cardPrice.textContent = 'Бесценно';
+      if (this.addProductButton) {
+        this.addProductButton.disabled = true;
+      }
     } else {
       this.cardPrice.textContent = `${price} синапсов`;
     }
@@ -74,6 +78,10 @@ item: HTMLElement
 
   set category(category: string) {
     this.cardCategory.textContent = category;
+  }
+  
+  stateButton(state: boolean) {
+    this.addProductButton.disabled = state;
   }
 
   render(cardData: Partial<ICard>) {
