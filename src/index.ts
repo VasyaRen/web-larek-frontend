@@ -127,16 +127,17 @@ events.on('order:submit', () => {
 });
 
 events.on('contacts:submit', () => {
-	modal.setContent(succes.render({}));
-	succes.setAmount(basketData.amount);
 	const orderApiData = Object.assign(
 		appData.order,
 		{ total: basketData.amount },
 		{ items: basketData.getCardsId() }
 	);
-	getApi.post('/order', orderApiData).then(() => { });
-	basketData.clearBasket();
-	appData.initOrder();
+	getApi.post('/order', orderApiData).then((res: Partial<IDataApiCard>) => {
+		modal.setContent(succes.render({}));
+		succes.setAmount(res.total);
+		basketData.clearBasket();
+		appData.initOrder();
+	});
 });
 
 events.on(

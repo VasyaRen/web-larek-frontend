@@ -22,6 +22,7 @@ export interface IPage {
 
 export interface IDataApiCard {
 	items: ICard[];
+	total: number;
 	getCard(cardId: string): ICard;
 }
 

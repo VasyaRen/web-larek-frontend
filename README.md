@@ -75,6 +75,7 @@ interface IPage {
 ```
 interface IDataApiCard {
 	items: ICard[];
+  total: number;
 	getCard(cardId: string): ICard;
 }
 ```
@@ -124,6 +125,7 @@ export type TCardBasket = Pick<ICard, 'id' | 'title' | 'price'>;
 Отвечает за массив данных карточек и взаимодействие с этими данными. \
 Поля:\
 - items: : ICard[] - массив объектов карточек;
+- total: number - cумма купленных карточек, для ответа сервера о заказе;
 - events: IEvents - экземпляр класса `EventEmitter` для инициации событий при изменении данных.
 
 Методы:\

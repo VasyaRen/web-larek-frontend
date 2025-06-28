@@ -10,6 +10,7 @@ import {
 export class DataCards implements IDataApiCard {
 	items: ICard[];
 	events: IEvents;
+	total:number;
 
 	constructor(events: IEvents) {
 		this.events = events;
@@ -49,7 +50,7 @@ export class DataBasket implements IDataCardBasket {
 	}
 
 	addCard(data: TCardBasket) {
-		this.itemCount =+1;
+		this.itemCount =+1; //увидела комментарий, спасибо, буду думать, как лучше
 		this.items.push(data);
 		this.events.emit('basket:changed');
 	}
